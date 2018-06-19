@@ -1,4 +1,3 @@
-import json
 import requests
 
 
@@ -8,7 +7,7 @@ class YGOPricesAPI():
         self.url = "http://yugiohprices.com/api"
 
     @staticmethod
-    def __make_request(self, url):
+    def __make_request(url):
         request = requests.get(url)
 
         if request.status_code != 200:
@@ -17,3 +16,11 @@ class YGOPricesAPI():
             raise Exception(f'Status code: {status_code} Reason: {reason}')
 
         return request.json()
+
+    def get_names(self):
+        url = f"{self.url}/card_names"
+        return self.__make_request(url)
+
+    def get_support(self, name):
+        url = f"{self.url}/card_support/{name}"
+        return self.__make_request(url)
