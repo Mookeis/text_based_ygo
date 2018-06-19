@@ -2,12 +2,12 @@ from PyQt5 import QtGui, QtCore, QtWidgets
 from PyQt5.QtCore import pyqtSlot
 from CreateDeckView import Ui_MainWindow
 from YGOPricesAPI import YGOPricesAPI
-from Deck import Deck
-import Levenshtein as lvst
+import Globals
 import sys
+import TestHandViewController
+
 
 card_list = YGOPricesAPI().get_names()
-deck = Deck()
 
 
 class ApplicationWindow(QtWidgets.QMainWindow):
@@ -19,10 +19,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.addButton.clicked.connect(self.on_click)
         self.ui.cardName.textChanged.connect(self.text_changed)
         self.ui.suggestionList.itemDoubleClicked.connect(self.list_double_clicked)
+        self.dialog = TestHandViewController.PlayTestWindow(self)
 
     @pyqtSlot()
     def on_click(self):
-        print()
+        self.dialog.show()
+        self.dialog.ui.deckList.addItems(Globals.deck.deck_list)
 
     @pyqtSlot()
     def text_changed(self):
@@ -33,16 +35,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     @pyqtSlot()
     def list_double_clicked(self):
         card = self.ui.suggestionList.currentItem().text()
-        if deck.is_full():
+        if Globals.deck.is_full():
             print("Deck is full")
             error_dialog = QtWidgets.QErrorMessage()
             error_dialog.showMessage('Deck cannot exceed 60 cards')
-        elif not deck.can_add_card(card):
+        elif not Globals.deck.can_add_card(card):
             print("Cannot add more than 3 copies of a card")
         else:
-            deck.deck_list.append(card)
+            Globals.deck.deck_list.append(card)
             self.ui.deckList.clear()
-            self.ui.deckList.addItems(deck.deck_list)
+            self.ui.deckList.addItems(Globals.deck.deck_list)
+        self.ui.lcdNumber.display(Globals.deck.get_count())
 
 
 def main():
