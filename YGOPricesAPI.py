@@ -24,3 +24,7 @@ class YGOPricesAPI:
     def get_data(self, name):
         url = f"{self.url}/card_data/{name}"
         return self.__make_request(url)
+
+    def get_image(self, name):
+        url = f"{self.url}/card_image/{name}"
+        return self.__make_request(url)
