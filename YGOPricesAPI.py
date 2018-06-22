@@ -1,7 +1,7 @@
 import requests
 
 
-class YGOPricesAPI():
+class YGOPricesAPI:
 
     def __init__(self):
         self.url = "http://yugiohprices.com/api"
@@ -21,6 +21,6 @@ class YGOPricesAPI():
         url = f"{self.url}/card_names"
         return self.__make_request(url)
 
-    def get_support(self, name):
-        url = f"{self.url}/card_support/{name}"
+    def get_data(self, name):
+        url = f"{self.url}/card_data/{name}"
         return self.__make_request(url)
