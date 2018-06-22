@@ -1,6 +1,6 @@
-class ExtraDeck:
-    def __init__(self):
-        self.extra_list = list()
+class ExtraDeck(object):
+    def __init__(self, extra_list):
+        self.extra_list = extra_list
         self.max_count = 15
 
     def get_count(self):

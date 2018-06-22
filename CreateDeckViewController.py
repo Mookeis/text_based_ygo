@@ -5,6 +5,7 @@ from PyQt5.QtCore import pyqtSlot
 
 import Globals
 import TestHandViewController
+from Card import Card
 from CreateDeckView import Ui_MainWindow
 from YGOPricesAPI import YGOPricesAPI
 
@@ -23,66 +24,61 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.dialog = TestHandViewController.PlayTestWindow(self)
         self.ui.actionSave_Deck.triggered.connect(self.save_deck_triggered)
         self.ui.actionLoad_Deck.triggered.connect(self.load_deck_triggered)
+        self.error_dialog = QtWidgets.QErrorMessage()
+        self.error_dialog.setWindowModality(QtCore.Qt.WindowModal)
 
     def update_lists(self, card):
-        card_data = YGOPricesAPI().get_data(card)
-        card_type = card_data.get("data").get("card_type")
-        monster_type = card_data.get("data").get("type")
-        error_dialog = QtWidgets.QErrorMessage()
-        error_dialog.setWindowModality(QtCore.Qt.WindowModal)
-        Globals.deck.deck_list.append(card)
-        if (monster_type is not None and ("Link" in monster_type or "Xyz" in monster_type or
-                                          "Synchro" in monster_type or "Fusion" in monster_type)):
+        if card.is_extra_deck():
             if Globals.extra.is_full():
-                error_dialog.showMessage('Extra deck cannot exceed 15 cards')
-                error_dialog.exec_()
-            elif not Globals.extra.can_add_card(card):
-                error_dialog.showMessage('Cannot add more than 3 copies of a card')
-                error_dialog.exec_()
+                self.error_dialog.showMessage('Extra deck cannot exceed 15 cards')
+                self.error_dialog.exec_()
+            elif not Globals.extra.can_add_card(card.get_name()):
+                self.error_dialog.showMessage('Cannot add more than 3 copies of a card')
+                self.error_dialog.exec_()
             else:
-                Globals.extra.extra_list.append(card)
-                self.ui.extraList.addItem(card)
+                Globals.extra.extra_list.append(card.get_name())
+                self.ui.extraList.addItem(card.get_name())
                 self.ui.extraCount.setValue(self.ui.extraCount.value() + 1)
         else:
             if Globals.deck.is_full():
-                error_dialog.showMessage('Deck cannot exceed 60 cards')
-                error_dialog.exec_()
-            elif not Globals.deck.can_add_card(card):
-                error_dialog.showMessage('Cannot add more than 3 copies of a card')
-                error_dialog.exec_()
+                self.error_dialog.showMessage('Deck cannot exceed 60 cards')
+                self.error_dialog.exec_()
+            elif not Globals.deck.can_add_card(card.get_name()):
+                self.error_dialog.showMessage('Cannot add more than 3 copies of a card')
+                self.error_dialog.exec_()
             else:
-                if card_type == "monster":
-                    self.ui.monsterList.addItem(card)
+                if card.get_card_type() == "monster":
+                    self.ui.monsterList.addItem(card.get_name())
                     self.ui.monsterCount.setValue(self.ui.monsterCount.value() + 1)
-                elif card_type == "spell":
-                    self.ui.spellList.addItem(card)
+                elif card.get_card_type() == "spell":
+                    self.ui.spellList.addItem(card.get_name())
                     self.ui.spellCount.setValue(self.ui.spellCount.value() + 1)
-                elif card_type == "trap":
-                    self.ui.trapList.addItem(card)
+                elif card.get_card_type() == "trap":
+                    self.ui.trapList.addItem(card.get_name())
                     self.ui.trapCount.setValue(self.ui.trapCount.value() + 1)
                 self.ui.totalCount.setValue(self.ui.totalCount.value() + 1)
+                Globals.deck.deck_list.append(card.get_name())
 
     @pyqtSlot()
     def save_deck_triggered(self):
         deck_name = self.ui.deckNameBox.text()
         f = open(f"decks/{deck_name}.txt", "w")
         f.writelines("\n".join(Globals.deck.deck_list))
+        f.write("\n")
+        f.writelines("\n".join(Globals.extra.extra_list))
         f.close()
 
     @pyqtSlot()
     def load_deck_triggered(self):
         filename, _ = QtWidgets.QFileDialog.getOpenFileName()
         if filename[-4:] != ".txt":
-            error_dialog = QtWidgets.QErrorMessage()
-            error_dialog.setWindowModality(QtCore.Qt.WindowModal)
-            error_dialog.showMessage("Invalid File Type Selected")
-            raise TypeError("Invalid File Type Selected")
+            self.error_dialog.showMessage("Invalid File Type Selected")
+            self.error_dialog.exec_()
         else:
             f = open(filename)
             for line in f.readlines():
-                card = line.rstrip()
-                Globals.deck.deck_list.append(card)
-                self.update_lists(card)
+                card_name = line.rstrip()
+                self.update_lists(Card(card_name))
             f.close()
             self.ui.deckNameBox.setText(filename.rsplit("/")[-1][:-4])
 
@@ -99,8 +95,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     @pyqtSlot()
     def list_double_clicked(self):
-        card = self.ui.suggestionList.currentItem().text()
-        self.update_lists(card)
+        card_name = self.ui.suggestionList.currentItem().text()
+        self.update_lists(Card(card_name))
 
 
 def main():

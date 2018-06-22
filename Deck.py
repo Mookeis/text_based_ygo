@@ -1,6 +1,6 @@
-class Deck:
-    def __init__(self):
-        self.deck_list = list()
+class Deck(object):
+    def __init__(self, deck_list):
+        self.deck_list = deck_list
         self.max_count = 60
 
     def get_count(self):
