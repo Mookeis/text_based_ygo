@@ -7,21 +7,17 @@ import Globals
 import TestHandViewController
 from Card import Card
 from CreateDeckView import Ui_MainWindow
-from YGOPricesAPI import YGOPricesAPI
-
-card_list = YGOPricesAPI().get_names()
 
 
-class ApplicationWindow(QtWidgets.QMainWindow):
+class CreateDeckWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
-        super(ApplicationWindow, self).__init__(parent)
-
+        super(CreateDeckWindow, self).__init__(parent)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.hand_test_window = None
         self.ui.testHandButton.clicked.connect(self.test_hand_clicked)
         self.ui.cardNameBox.textChanged.connect(self.search_text_changed)
         self.ui.suggestionList.itemDoubleClicked.connect(self.suggestion_double_clicked)
-        self.dialog = TestHandViewController.PlayTestWindow(self)
         self.ui.actionSave_Deck.triggered.connect(self.save_deck_triggered)
         self.ui.actionLoad_Deck.triggered.connect(self.load_deck_triggered)
         self.error_dialog = QtWidgets.QErrorMessage()
@@ -33,7 +29,19 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         fg.moveCenter(cp)
         self.move(fg.topLeft())
 
-    # TODO: fix
+    def closeEvent(self, event):
+        close = QtWidgets.QMessageBox()
+        close.setText("Confirm Application Close")
+        close.setIcon(QtWidgets.QMessageBox.Warning)
+        close.setStandardButtons(QtWidgets.QMessageBox.Close | QtWidgets.QMessageBox.Cancel)
+        close = close.exec()
+
+        if close == QtWidgets.QMessageBox.Close:
+            event.accept()
+            sys.exit()
+        else:
+            event.ignore()
+
     @pyqtSlot()
     def suggestion_item_clicked(self):
         item = self.ui.suggestionList.currentItem()
@@ -43,7 +51,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.ui.cardNameLabel.setText(card.get_name())
             self.ui.cardNameLabel.adjustSize()
             self.ui.effectBox.setText(card.get_text())
-            # img = YGOPricesAPI().get_image(card.get_name())
+            self.ui.cardTypeBox.setText(card.get_card_type())
+            self.ui.typeBox.setText(card.get_type())
+            self.ui.attributeBox.setText(card.get_attribute())
+            self.ui.levelBox.setText(str(card.get_level()))
+
 
 
     @pyqtSlot()
@@ -71,14 +83,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     @pyqtSlot()
     def test_hand_clicked(self):
-        self.dialog.show()
-        self.dialog.ui.deckList.addItems(Globals.deck.deck_list)
+        self.hide()
+        self.hand_test_window = TestHandViewController.PlayTestWindow(self)
+        self.hand_test_window.show()
 
     @pyqtSlot()
     def search_text_changed(self):
         self.ui.suggestionList.clear()
         self.ui.suggestionList.addItems(list(filter(
-            lambda k: self.ui.cardNameBox.text().lower() in k.lower(), card_list)))
+            lambda k: self.ui.cardNameBox.text().lower() in k.lower(), Globals.card_list)))
 
     @pyqtSlot()
     def suggestion_double_clicked(self):
@@ -116,14 +129,3 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     self.ui.trapCount.setValue(self.ui.trapCount.value() + 1)
                 self.ui.totalCount.setValue(self.ui.totalCount.value() + 1)
                 Globals.deck.deck_list.append(card.get_name())
-
-
-def main():
-    app = QtWidgets.QApplication(sys.argv)
-    application = ApplicationWindow()
-    application.show()
-    sys.exit(app.exec_())
-
-
-if __name__ == "__main__":
-    main()

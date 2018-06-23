@@ -9,6 +9,7 @@ class Card(object):
         self.card_type = data.get("card_type")
         self.type = data.get("type")
         self.attribute = data.get("family")
+        self.level = data.get("level")
 
     def get_name(self):
         return self.name
@@ -24,6 +25,9 @@ class Card(object):
 
     def get_attribute(self):
         return self.attribute
+
+    def get_level(self):
+        return self.level
 
     def is_extra_deck(self):
         return (self.type is not None
